@@ -10,7 +10,7 @@ SpectreScan is a lightweight and extensible network scanner designed for cyberse
 
 - TCP/UDP scanning
 - Subnet/network scanning
-- SYN (Half-Open) scanning using Scapy
+- SYN scanning using Scapy
 - Banner grabbing and service detection
 - Lightweight modular architecture
 - Plugin support
