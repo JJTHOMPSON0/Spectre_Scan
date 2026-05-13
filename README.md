@@ -8,8 +8,8 @@ SpectreScan is a lightweight and extensible network scanner designed for cyberse
 
 # Features
 
-- Asynchronous TCP scanning
-- CIDR subnet/network scanning
+- TCP/UDP scanning
+- Subnet/network scanning
 - SYN (Half-Open) scanning using Scapy
 - Banner grabbing and service detection
 - Lightweight modular architecture
@@ -18,7 +18,6 @@ SpectreScan is a lightweight and extensible network scanner designed for cyberse
 - Basic OS fingerprinting
 - Optional JSON report generation
 - Custom port range scanning
-- Resume-worthy cybersecurity project
 
 ---
 
