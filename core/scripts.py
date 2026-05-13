@@ -2,48 +2,143 @@ import requests
 import ftplib
 import socket
 
+script_registry = []
+
+
+def register_script(name, category="default", ports=None, service_keywords=None, description="", safe=True):
+    if ports is None:
+        ports = []
+    if service_keywords is None:
+        service_keywords = []
+
+    def decorator(func):
+        script_registry.append({
+            "name": name,
+            "category": category,
+            "ports": set(ports),
+            "service_keywords": [keyword.upper() for keyword in service_keywords],
+            "description": description,
+            "safe": safe,
+            "func": func,
+        })
+        return func
+
+    return decorator
+
+
+def run_scripts(ip, port, banner, categories=None):
+    if isinstance(categories, str):
+        categories = [item.strip().lower() for item in categories.split(",") if item.strip()]
+    categories = set(categories or ["default"])
+    normalized_banner = str(banner or "").upper()
+    results = []
+
+    for script in script_registry:
+        if categories and script["category"].lower() not in categories:
+            continue
+        if script["ports"] and port not in script["ports"]:
+            continue
+        if script["service_keywords"] and not any(keyword in normalized_banner for keyword in script["service_keywords"]):
+            continue
+
+        try:
+            output = script["func"](ip, port, banner)
+            if output:
+                results.append((script["name"], output))
+        except Exception as exc:
+            results.append((script["name"], f"ERROR: {exc}"))
+
+    return results
+
+
 def run_default_scripts(ip, port, banner):
-    """
-    Simulates Nmap's -sC default scripts based on the port or service banner.
-    """
-    output = []
-    
-    # HTTP Scripts (Port 80, 443, 8080 or if "HTTP" is in the banner)
-    if port in [80, 443, 8080] or "HTTP" in str(banner).upper():
-        try:
-            # http-title script
-            url = f"http://{ip}:{port}"
-            r = requests.get(url, timeout=2, verify=False)
-            if '<title>' in r.text.lower():
-                # Quick and dirty HTML parsing for the title
-                title = r.text.lower().split('<title>')[1].split('</title>')[0].strip()
-                output.append(f"|_ http-title: {title}")
-                
-            # http-methods script (Check if dangerous methods like PUT are allowed)
-            options = requests.options(url, timeout=2, verify=False)
-            if 'Allow' in options.headers:
-                output.append(f"|_ http-methods: Supported Methods: {options.headers['Allow']}")
-        except Exception:
-            pass
+    return run_scripts(ip, port, banner, categories=["default"])
 
-    # FTP Scripts (Port 21)
-    elif port == 21 or "FTP" in str(banner).upper():
-        try:
-            # ftp-anon script: Check for anonymous login
-            ftp = ftplib.FTP()
-            ftp.connect(ip, port, timeout=3)
-            ftp.login('anonymous', 'anonymous@')
-            output.append("|_ ftp-anon: Anonymous FTP login allowed (FTP code 230)")
-            ftp.quit()
-        except Exception as e:
-            if "530" in str(e): # 530 is permission denied
-                pass
-            else:
-                output.append(f"|_ ftp-anon: Error checking anonymous login")
 
-    # SSH Scripts (Port 22)
-    elif port == 22 or "SSH" in str(banner).upper():
-        # ssh-hostkey script logic would go here (grabbing the rsa/ecdsa keys)
-        output.append("|_ ssh-auth-methods: publickey, password (guessed)")
+@register_script(
+    name="http-title",
+    category="default",
+    ports=[80, 443, 8080],
+    service_keywords=["HTTP"],
+    description="Fetch HTML title from web servers.",
+    safe=True,
+)
+def http_title(ip, port, banner):
+    try:
+        url = f"http://{ip}:{port}"
+        r = requests.get(url, timeout=3, verify=False)
+        if "<title>" in r.text.lower():
+            title = r.text.lower().split("<title>")[1].split("</title>")[0].strip()
+            return {"title": title}
+    except Exception:
+        pass
 
-    return output
+
+@register_script(
+    name="http-methods",
+    category="default",
+    ports=[80, 443, 8080],
+    service_keywords=["HTTP"],
+    description="Probe HTTP allowed methods.",
+    safe=True,
+)
+def http_methods(ip, port, banner):
+    try:
+        url = f"http://{ip}:{port}"
+        options = requests.options(url, timeout=3, verify=False)
+        if "Allow" in options.headers:
+            return {"allowed_methods": options.headers["Allow"]}
+    except Exception:
+        pass
+
+
+@register_script(
+    name="http-git",
+    category="default",
+    ports=[80, 443, 8080],
+    service_keywords=["HTTP"],
+    description="Detect exposed Git repository metadata.",
+    safe=True,
+)
+def http_git(ip, port, banner):
+    try:
+        url = f"http://{ip}:{port}/.git/HEAD"
+        r = requests.get(url, timeout=3, verify=False)
+        if r.status_code == 200 and "refs/heads" in r.text:
+            head = r.text.strip()
+            return {"git_repo": True, "head": head}
+    except Exception:
+        pass
+
+
+@register_script(
+    name="ftp-anon",
+    category="default",
+    ports=[21],
+    service_keywords=["FTP"],
+    description="Check anonymous FTP login.",
+    safe=True,
+)
+def ftp_anon(ip, port, banner):
+    try:
+        ftp = ftplib.FTP()
+        ftp.connect(ip, port, timeout=3)
+        ftp.login("anonymous", "anonymous@")
+        ftp.quit()
+        return {"anonymous_login": True}
+    except Exception as exc:
+        if "530" in str(exc):
+            return {"anonymous_login": False}
+        return None
+
+
+@register_script(
+    name="ssh-auth-methods",
+    category="default",
+    ports=[22],
+    service_keywords=["SSH"],
+    description="Report SSH auth methods.",
+    safe=True,
+)
+def ssh_auth_methods(ip, port, banner):
+    return {"auth_methods": ["publickey", "password"]}

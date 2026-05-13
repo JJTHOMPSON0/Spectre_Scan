@@ -1,0 +1,21 @@
+{
+    "target": "127.0.0.1",
+    "scan_time": "2026-05-13 08:37:41.552283",
+    "results": [
+        {
+            "host": "127.0.0.1",
+            "port": 80,
+            "protocol": "tcp",
+            "status": "open",
+            "os": "Linux/Unix/macOS"
+        },
+        {
+            "host": "127.0.0.1",
+            "port": 80,
+            "protocol": "tcp",
+            "status": "open",
+            "banner": "Server: SimpleHTTP/0.6 Python/3.13.12",
+            "os": "Linux/Unix/macOS"
+        }
+    ]
+}
