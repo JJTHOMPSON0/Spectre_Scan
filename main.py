@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import os
 import time
+from dotenv import load_dotenv
 from rich.console import Console
 
 from core.discovery import discover_live_hosts
@@ -11,24 +12,38 @@ from core.scanner import run_scan
 from core.scripts import run_scripts
 from core.syn import syn_scan
 from core.utils import parse_ports
+from core.interactive import interactive_menu
+from core.timing import get_timing_profile, describe_timing_profile
+from core.proxy import proxy_manager
+from core.cve_engine import cve_engine
+from core.lua_scripts import script_library
+from core.fingerprinting import AggressiveFingerprinting
 from rich.table import Table
+
+# Load environment variables from .env
+load_dotenv()
 
 console = Console()
 parser = argparse.ArgumentParser(description="SpectreScan")
 
 parser.add_argument("target", nargs="?", help="Target IP or CIDR")
-parser.add_argument("-P", "--ports", default="1-1024", help="Port range or list, e.g. 22,80,443,1000-2000")
+parser.add_argument("-i", "--interactive", action="store_true", help="Launch interactive menu mode")
+parser.add_argument("-P", "--ports", default="1-65535", help="Port range or list, e.g. 22,80,443,1000-2000")
 parser.add_argument("-M", "--scan-type", choices=["auto", "tcp", "syn", "udp", "all"], default="auto", help="Scan type to perform (auto uses SYN if root else TCP)")
-parser.add_argument("-T", "--timeout", type=float, default=1.0, help="Connection timeout in seconds")
-parser.add_argument("-c", "--concurrency", type=int, default=500, help="Maximum concurrent probes")
+parser.add_argument("-T", "--timing-template", type=int, choices=[0, 1, 2, 3, 4, 5], default=3, help="Timing template: 0=Paranoid, 1=Sneaky, 2=Polite, 3=Normal (default), 4=Aggressive, 5=Insane")
+parser.add_argument("--timeout", type=float, default=None, help="Connection timeout in seconds (overrides timing template)")
+parser.add_argument("-c", "--concurrency", type=int, default=None, help="Maximum concurrent probes (overrides timing template)")
 parser.add_argument("-n", "--no-discovery", action="store_true", help="Skip host discovery and scan the provided target directly")
 parser.add_argument("-sS", "--syn", action="store_true", help="Perform TCP SYN scan (requires root)")
 parser.add_argument("-sU", "--udp", action="store_true", help="Perform UDP scan")
 parser.add_argument("-O", "--os", action="store_true", help="Enable OS detection via TTL")
+parser.add_argument("--aggressive-fingerprinting", action="store_true", help="Enable aggressive OS fingerprinting (TCP window, SYN cookies, etc.)")
 parser.add_argument("-sV", "--version", action="store_true", help="Probe open ports for service/version info")
+parser.add_argument("--check-cve", action="store_true", help="Check detected services for known CVEs")
 parser.add_argument("-sC", "--scripts", action="store_true", help="Run built-in Nmap-style scripts")
 parser.add_argument("-C", "--script-categories", default="default", help="Comma-separated script categories to run")
 parser.add_argument("-p", "--plugins", action="store_true", help="Run service plugins from the plugins folder")
+parser.add_argument("--proxy", metavar="PROXY_URL", help="Use proxy (e.g., http://host:port, socks5://host:port)")
 parser.add_argument("-o", "--save", metavar="FILE", help="Save report to JSON")
 parser.add_argument("-H", "--help-brief", action="store_true", help="List compact arguments and one-line usage notes")
 
@@ -40,6 +55,8 @@ def is_root():
 
 def print_help_brief():
     print("Usage: main.py [options] target\n")
+    print("MODES:")
+    print("  -i, --interactive     Launch interactive menu mode")
     print("TARGET SPECIFICATION:")
     print("  target                Target IP or CIDR")
     print("HOST DISCOVERY:")
@@ -52,14 +69,19 @@ def print_help_brief():
     print("  -O, --os              OS detection via TTL (requires root)")
     print("SERVICE/VERSION DETECTION:")
     print("  -sV, --version        Probe open ports for service/version info")
+    print("  --aggressive-fingerprinting  Advanced OS fingerprinting (TCP window, SYN cookies)")
     print("SCRIPTS & PLUGINS:")
     print("  -sC, --scripts        Run built-in Nmap-style scripts")
     print("  -C, --script-categories  Script categories to run")
     print("  -p, --plugins         Run service plugins")
     print("PERFORMANCE:")
+    print("  -T, --timing-template 0=Paranoid, 1=Sneaky, 2=Polite, 3=Normal (default), 4=Aggressive, 5=Insane")
     print("  -P, --ports           Port range/list, e.g. 22,80,443,1000-2000")
-    print("  -T, --timeout         Connection timeout in seconds")
-    print("  -c, --concurrency     Maximum concurrent probes")
+    print("  --timeout             Connection timeout in seconds (overrides timing template)")
+    print("  -c, --concurrency     Maximum concurrent probes (overrides timing template)")
+    print("ADVANCED:")
+    print("  --proxy PROXY_URL     Use proxy (http://host:port, socks5://host:port)")
+    print("  --check-cve           Check detected services for known CVEs")
     print("OUTPUT:")
     print("  -o, --save FILE       Save report to JSON")
     print("  -H, --help-brief      Show this compact help")
@@ -67,6 +89,36 @@ def print_help_brief():
 if args.help_brief:
     print_help_brief()
     raise SystemExit(0)
+
+# Apply timing template if no manual overrides
+timing_profile = get_timing_profile(args.timing_template)
+if args.timeout is None:
+    args.timeout = timing_profile.timeout
+if args.concurrency is None:
+    args.concurrency = timing_profile.concurrency
+
+console.print(f"[cyan]Timing template: {timing_profile.name} (T{args.timing_template})[/cyan]")
+console.print(f"[cyan]Timeout: {args.timeout}s, Concurrency: {args.concurrency}[/cyan]")
+
+# Configure proxy if provided
+if args.proxy:
+    proxy_manager.enable_proxy(args.proxy)
+
+if args.interactive:
+    config = interactive_menu()
+    if not config:
+        raise SystemExit(1)
+    args.target = config["target"]
+    args.ports = config["ports"]
+    args.scan_type = config["scan_type"]
+    args.version = config["version_detect"]
+    args.os = config["os_detect"]
+    args.scripts = config["scripts"]
+    args.plugins = config["plugins"]
+    args.timeout = config["timeout"]
+    args.concurrency = config["concurrency"]
+    args.no_discovery = config["no_discovery"]
+    args.save = config["save"]
 
 if not args.target:
     parser.error("the following arguments are required: target")
@@ -145,6 +197,29 @@ if args.scan_type in ("udp", "all") or args.udp:
     udp_results = udp_scan(live_hosts, ports, timeout=args.timeout)
     results.extend(udp_results)
 
+# Aggressive OS fingerprinting
+if args.aggressive_fingerprinting and results:
+    console.print("\n[+] Running aggressive OS fingerprinting...")
+    for result in results:
+        host = result.get("host")
+        if host:
+            fp_results = AggressiveFingerprinting.run_aggressive_fingerprinting(host, ports[:3])
+            if fp_results["techniques"]:
+                result["aggressive_fingerprinting"] = fp_results
+                console.print(f"    [cyan]{host}: {fp_results['best_guess']} ({fp_results['confidence']}%)[/cyan]")
+
+# CVE checking
+if args.check_cve and results:
+    console.print("\n[+] Checking for CVEs...")
+    for result in results:
+        service = result.get("banner", "").split("/")[0] if result.get("banner") else ""
+        version = result.get("version", "")
+        if service:
+            cve_engine.check_service_vulnerabilities(result.get("host"), result.get("port"), service, version)
+            cves = cve_engine.lookup_service_cves(service, version)
+            if cves:
+                result["cves"] = [cve.get("cve", {}).get("id") for cve in cves[:3]]
+
 if results:
     table = Table(show_header=True, header_style="bold cyan")
     table.add_column("HOST")
@@ -188,6 +263,20 @@ if args.scripts:
             host_data["script_results"] = script_output
             for script_name, script_data in script_output:
                 console.print(f"    [cyan]|_ {script_name}: {script_data}[/cyan]")
+    
+    # Advanced Lua-style scripting
+    console.print("\n[*] Initiating Advanced NSE-style Scripts...")
+    for host_data in results:
+        port = host_data.get("port")
+        scripts = script_library.get_scripts_by_port(port)
+        for script in scripts:
+            result = script_library.execute_script(
+                script.name,
+                host_data["host"],
+                port,
+            )
+            if result:
+                console.print(f"    [cyan]|_ {script.name}: {result.get('result')}[/cyan]")
 
 if args.plugins and plugins:
     console.print("\n[*] Running service plugins...")

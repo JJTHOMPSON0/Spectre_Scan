@@ -2,35 +2,26 @@ from scapy.all import IP, TCP, sr1
 
 
 def analyze_ttl(ip_header):
-    """Analyze TTL and return OS guess with confidence percentage."""
+    """Analyze TTL and return most likely OS with confidence percentage."""
     ttl = ip_header.ttl
     
-    os_guesses = []
-    
     if ttl <= 64:
-        confidence = max(0, 100 - abs(ttl - 64) * 2)
-        os_guesses.append(("Linux/Unix/macOS", confidence))
-    if 60 <= ttl <= 68:
-        confidence = max(0, 100 - abs(ttl - 64) * 2)
-        os_guesses.append(("Linux/Unix/macOS", confidence))
+        confidence = max(0, 100 - abs(ttl - 64) * 3)
+        if ttl <= 32:
+            return f"Linux (Router/NAT adjusted) ({int(confidence)}%)"
+        else:
+            return f"Linux ({int(confidence)}%)"
     
-    if ttl <= 128 and ttl > 64:
-        confidence = max(0, 100 - abs(ttl - 128) * 2)
-        os_guesses.append(("Windows", confidence))
-    if 120 <= ttl <= 128:
-        confidence = max(0, 100 - abs(ttl - 128) * 2)
-        os_guesses.append(("Windows", confidence))
+    elif ttl <= 128:
+        confidence = max(0, 100 - abs(ttl - 128) * 3)
+        return f"Windows ({int(confidence)}%)"
     
-    if ttl > 128 and ttl <= 255:
-        confidence = max(0, 100 - abs(ttl - 255) * 2)
-        os_guesses.append(("Cisco/Network Device", confidence))
+    elif ttl > 128 and ttl <= 255:
+        confidence = max(0, 100 - abs(ttl - 255) * 3)
+        return f"Cisco/Network Device ({int(confidence)}%)"
     
-    if not os_guesses:
+    else:
         return "Unknown OS"
-    
-    best_guess = max(os_guesses, key=lambda x: x[1])
-    os_name, confidence = best_guess
-    return f"{os_name} ({int(confidence)}%)"
 
 
 def get_os_guess(host, port, timeout=0.5):

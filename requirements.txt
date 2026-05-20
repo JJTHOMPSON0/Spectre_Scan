@@ -1,3 +1,5 @@
 scapy
 rich
 requests
+python-dotenv
+requests[socks]
