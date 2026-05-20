@@ -487,21 +487,6 @@ The following features require root/sudo:
 
 ---
 
-## Future Improvements
-
-1. **Distributed Scanning** — Multi-machine agent support for large-scale network reconnaissance
-2. **Web Dashboard** — Real-time scan visualization and results browser
-3. **Advanced Machine Learning** — ML-based OS detection using network signatures
-4. **Traceroute Visualization** — Network path mapping and topology visualization
-5. **Brute-Force Modules** — Integrated credential testing (SSH, HTTP, FTP)
-6. **Stealth Modes** — Packet fragmentation, IP spoofing, randomized timing
-7. **Service Behavior Analysis** — Deep protocol analysis and anomaly detection
-8. **Custom Exploit Integration** — Automated vulnerability exploitation
-9. **Docker Support** — Containerized SpectreScan deployment
-10. **Cloud Provider Integration** — AWS/Azure/GCP asset scanning
-
----
-
 ## Technologies Used
 
 - **Python 3** — Core language
@@ -519,7 +504,6 @@ This project is intended strictly for:
 - Educational purposes
 - Authorized security testing
 - Personal lab environments
-- CTF platforms (HackTheBox, TryHackMe)
 
 **Do not scan systems or networks without explicit authorization.**
 
@@ -528,5 +512,3 @@ This project is intended strictly for:
 ## Author
 
 Deepanshu  
-Enhanced with interactive UI, advanced OS detection, and Nmap-style features.
-
