@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import os
+import sys
 import time
 from dotenv import load_dotenv
 from rich.console import Console
@@ -12,6 +13,7 @@ from core.scanner import run_scan
 from core.scripts import run_scripts
 from core.syn import syn_scan
 from core.utils import parse_ports
+from core.target_validation import validate_target
 from core.interactive import interactive_menu
 from core.timing import get_timing_profile, describe_timing_profile
 from core.proxy import proxy_manager
@@ -45,50 +47,16 @@ parser.add_argument("-C", "--script-categories", default="default", help="Comma-
 parser.add_argument("-p", "--plugins", action="store_true", help="Run service plugins from the plugins folder")
 parser.add_argument("--proxy", metavar="PROXY_URL", help="Use proxy (e.g., http://host:port, socks5://host:port)")
 parser.add_argument("-o", "--save", metavar="FILE", help="Save report to JSON")
-parser.add_argument("-H", "--help-brief", action="store_true", help="List compact arguments and one-line usage notes")
 
 args = parser.parse_args()
+
+if len(sys.argv) == 2 and sys.argv[1].lower() == "help":
+    parser.print_help()
+    raise SystemExit(0)
 
 def is_root():
     return getattr(os, "geteuid", lambda: 1)() == 0
 
-
-def print_help_brief():
-    print("Usage: main.py [options] target\n")
-    print("MODES:")
-    print("  -i, --interactive     Launch interactive menu mode")
-    print("TARGET SPECIFICATION:")
-    print("  target                Target IP or CIDR")
-    print("HOST DISCOVERY:")
-    print("  -n, --no-discovery    Skip discovery and scan target directly")
-    print("SCAN TYPES:")
-    print("  -M, --scan-type       auto, tcp, syn, udp, all")
-    print("                         auto uses SYN if root else TCP")
-    print("  -sS, --syn            TCP SYN scan (requires root)")
-    print("  -sU, --udp            UDP scan")
-    print("  -O, --os              OS detection via TTL (requires root)")
-    print("SERVICE/VERSION DETECTION:")
-    print("  -sV, --version        Probe open ports for service/version info")
-    print("  --aggressive-fingerprinting  Advanced OS fingerprinting (TCP window, SYN cookies)")
-    print("SCRIPTS & PLUGINS:")
-    print("  -sC, --scripts        Run built-in Nmap-style scripts")
-    print("  -C, --script-categories  Script categories to run")
-    print("  -p, --plugins         Run service plugins")
-    print("PERFORMANCE:")
-    print("  -T, --timing-template 0=Paranoid, 1=Sneaky, 2=Polite, 3=Normal (default), 4=Aggressive, 5=Insane")
-    print("  -P, --ports           Port range/list, e.g. 22,80,443,1000-2000")
-    print("  --timeout             Connection timeout in seconds (overrides timing template)")
-    print("  -c, --concurrency     Maximum concurrent probes (overrides timing template)")
-    print("ADVANCED:")
-    print("  --proxy PROXY_URL     Use proxy (http://host:port, socks5://host:port)")
-    print("  --check-cve           Check detected services for known CVEs")
-    print("OUTPUT:")
-    print("  -o, --save FILE       Save report to JSON")
-    print("  -H, --help-brief      Show this compact help")
-
-if args.help_brief:
-    print_help_brief()
-    raise SystemExit(0)
 
 # Apply timing template if no manual overrides
 timing_profile = get_timing_profile(args.timing_template)
@@ -122,6 +90,9 @@ if args.interactive:
 
 if not args.target:
     parser.error("the following arguments are required: target")
+
+if not validate_target(args.target):
+    parser.error("invalid target: must be an IP address, CIDR, or hostname")
 
 if args.scan_type == "auto":
     if is_root():
