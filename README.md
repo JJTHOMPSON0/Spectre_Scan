@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.png" width="950">
+  <img src="assets/banner.jpeg" width="950">
 </p>
 
 # SpectreScan v2
