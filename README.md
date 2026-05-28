@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="assets/banner.png" width="900">
+</p>
 # SpectreScan v2
 
 [![DOCS](https://img.shields.io/badge/DOCS-SpectreScan-blue?style=for-the-badge)](#readme) [![LICENSE](https://img.shields.io/badge/LICENSE-MIT-green?style=for-the-badge)](LICENSE) [![BUILT BY](https://img.shields.io/badge/BUILT%20BY-Deepanshu-purple?style=for-the-badge)](#) [![LANG](https://img.shields.io/badge/LANG-EN-lightgrey?style=for-the-badge)](#)
