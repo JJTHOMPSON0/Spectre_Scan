@@ -1,6 +1,6 @@
 # SpectreScan v2
 
-[![Docs](https://img.shields.io/badge/docs-SpectreScan-blue?style=for-the-badge)](https://github.com/yourusername/SpectreScan#readme) [![Discord](https://img.shields.io/badge/discord-join-brightgreen?style=for-the-badge)](https://discord.gg) [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE) [![Built by](https://img.shields.io/badge/built%20by-Nous%20Research-purple?style=for-the-badge)](#) [![Lang](https://img.shields.io/badge/lang-en%2Fzh-lightgrey?style=for-the-badge)](#)
+[![DOCS](https://img.shields.io/badge/DOCS-SpectreScan-blue?style=for-the-badge)](#readme) [![LICENSE](https://img.shields.io/badge/LICENSE-MIT-green?style=for-the-badge)](LICENSE) [![BUILT BY](https://img.shields.io/badge/BUILT%20BY-Deepanshu-purple?style=for-the-badge)](#) [![LANG](https://img.shields.io/badge/LANG-EN-lightgrey?style=for-the-badge)](#)
 
 > A modular Nmap-inspired network reconnaissance framework in Python.
 
