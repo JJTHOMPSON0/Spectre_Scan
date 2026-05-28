@@ -1,5 +1,7 @@
 # SpectreScan v2
 
+[![Docs](https://img.shields.io/badge/docs-SpectreScan-blue?style=for-the-badge)](https://github.com/yourusername/SpectreScan#readme) [![Discord](https://img.shields.io/badge/discord-join-brightgreen?style=for-the-badge)](https://discord.gg) [![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE) [![Built by](https://img.shields.io/badge/built%20by-Nous%20Research-purple?style=for-the-badge)](#) [![Lang](https://img.shields.io/badge/lang-en%2Fzh-lightgrey?style=for-the-badge)](#)
+
 > A modular Nmap-inspired network reconnaissance framework in Python.
 
 SpectreScan is built for security learning, authorized reconnaissance, and lab testing. It supports asynchronous scanning, SYN and UDP probes, OS fingerprinting, version detection, scripting, plugins, proxy routing, and optional CVE lookups.
