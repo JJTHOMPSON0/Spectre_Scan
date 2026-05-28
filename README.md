@@ -1,243 +1,161 @@
 # SpectreScan v2
 
-> A modular Nmap-inspired network reconnaissance framework built in Python with interactive UI and customizable scan modes.
+> A modular Nmap-inspired network reconnaissance framework in Python.
 
-SpectreScan is an extensible network scanner designed for cybersecurity learning, reconnaissance automation, and network analysis. It supports asynchronous TCP scanning, SYN scanning, subnet discovery, OS fingerprinting, version detection, and a plugin-based architecture with Nmap-style scripting.
-
----
-
-## Features
-
-- **Asynchronous TCP connect scanning** with progress tracking
-- **SYN (half-open) scanning** using Scapy (requires root)
-- **UDP scanning** support
-- **CIDR subnet/network scanning** with ARP discovery
-- **OS fingerprinting** via TTL analysis with confidence percentages
-- **Service/version detection** with probe-based banner grabbing
-- **Interactive UI mode** for easy scan configuration
-- **Nmap-style scripting engine** with registered script categories
-- **Plugin system** with automatic service matching
-- **JSON report generation** with full scan metadata
-- **Progress bars** for long-running scans
-- **Nmap-like results table** with host, port, service, and OS columns
-- **Root-aware scan mode selection** (SYN if root, TCP if unprivileged)
-- **Exposed .git detection** via built-in HTTP scripts
+SpectreScan is built for security learning, authorized reconnaissance, and lab testing. It supports asynchronous scanning, SYN and UDP probes, OS fingerprinting, version detection, scripting, plugins, proxy routing, and optional CVE lookups.
 
 ---
 
-## Installation
+## 🚀 Quick Start
 
-### Clone Repository
+1. Clone the repository:
 
 ```bash
 git clone https://github.com/yourusername/SpectreScan.git
 cd SpectreScan
 ```
 
-### Create Virtual Environment
+2. Create and activate a Python virtual environment:
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Install Dependencies
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## Usage
-
-### Interactive Mode (Recommended)
-
-Launch the interactive menu to configure your scan:
-
-```bash
-python main.py -i
-```
-
-This will prompt you for:
-- Target (IP or CIDR)
-- Port range/list
-- Scan type (auto, tcp, syn, udp, all)
-- Service version detection
-- OS detection
-- Script execution
-- Plugin execution
-- Timeout and concurrency settings
-
-### Command-Line Mode
-
-#### Scan a Single Host
-
-```bash
-python main.py 127.0.0.1
-```
-
-#### Scan an Entire Network
-
-```bash
-python main.py 192.168.1.0/24
-```
-
-#### Custom Port Range
-
-```bash
-python main.py 192.168.1.0/24 -P 22,80,443,1000-2000
-```
-
-#### TCP Connect Scan (Non-Root)
-
-```bash
-python main.py 127.0.0.1 -M tcp -sV
-```
-
-#### SYN Scan with OS Detection (Requires Root)
-
-```bash
-sudo python main.py 127.0.0.1 -M syn -O -sV
-```
-
-#### UDP Scan
-
-```bash
-python main.py 127.0.0.1 -sU -P 53,123,161
-```
-
-#### Run with Scripts and Plugins
-
-```bash
-python main.py 127.0.0.1 -sV -sC -p
-```
-
-#### Aggressive OS Fingerprinting (Requires Root)
-
-```bash
-sudo python main.py 127.0.0.1 --aggressive-fingerprinting -O
-```
-
-#### Check for CVEs in Detected Services
-
-```bash
-python main.py 127.0.0.1 -sV --check-cve
-```
-
-#### Use Timing Template for Slower, Stealthier Scan
-
-```bash
-python main.py 127.0.0.1 -T1  # Sneaky profile
-python main.py 127.0.0.1 -T4  # Aggressive profile
-```
-
-#### Route Scan Through Proxy
-
-```bash
-python main.py 127.0.0.1 --proxy socks5://127.0.0.1:1080
-```
-
-#### Combine Multiple Advanced Features
-
-```bash
-sudo python main.py 192.168.1.0/24 -M syn -O --aggressive-fingerprinting -sV --check-cve -sC -p -T3 -o scan_report.json
-```
-
----
-
-## Command-Line Options
-
-### Modes
-
-- `-i, --interactive` — Launch interactive menu mode
-
-### Target Specification
-
-- `target` — Target IP or CIDR
-
-### Host Discovery
-
-- `-n, --no-discovery` — Skip discovery and scan target directly
-
-### Scan Types
-
-- `-M, --scan-type` — `auto` (default), `tcp`, `syn`, `udp`, or `all`
-  - `auto` uses SYN if root, otherwise TCP
-- `-sS, --syn` — TCP SYN scan (requires root)
-- `-sU, --udp` — UDP scan
-
-### Timing Templates (Nmap-style)
-
-- `-T, --timing-template` — Scan speed (default: `3`)
-  - `0` — Paranoid: Very slow, stealthy (5min timeout, 1 concurrent)
-  - `1` — Sneaky: Slow, less detectable (1min timeout, 2 concurrent)
-  - `2` — Polite: Reduced network load (5s timeout, 50 concurrent)
-  - `3` — Normal: Balanced speed/stealth (1s timeout, 500 concurrent) **[default]**
-  - `4` — Aggressive: Fast scanning (500ms timeout, 1000 concurrent)
-  - `5` — Insane: Very fast, high network load (100ms timeout, 2000 concurrent)
-
-### Service/Version Detection
-
-- `-sV, --version` — Probe open ports for service/version info
-- `-O, --os` — Enable OS detection via TTL (requires root)
-- `--aggressive-fingerprinting` — Advanced OS fingerprinting using:
-  - TCP window size analysis
-  - SYN cookies detection
-  - IP options response analysis
-  - ICMP response patterns
-
-### Vulnerability Assessment
-
-- `--check-cve` — Check detected services for known CVEs from NVD database
-- Automatically correlates service versions with CVE data
-
-### Scripts & Plugins
-
-- `-sC, --scripts` — Run built-in Nmap-style scripts
-- `-C, --script-categories` — Comma-separated script categories (default: `default`)
-- `-p, --plugins` — Run service plugins from `plugins/` folder
-
-### Performance
-
-- `-P, --ports` — Port range/list, e.g. `22,80,443,1000-2000` (default: `1-65535`)
-  - **Full TCP port scan by default**; expect a longer scan time
-- `--timeout` — Connection timeout in seconds (overrides timing template)
-- `-c, --concurrency` — Maximum concurrent probes (overrides timing template)
-
-### Advanced Options
-
-- `--proxy PROXY_URL` — Route traffic through proxy
-  - Supports `http://host:port`
-  - Supports `https://host:port`
-  - Supports `socks5://host:port`
-- Environment variables: `PROXY_HTTP`, `PROXY_HTTPS`, `PROXY_SOCKS5`
-
-### Output
-
-- `-o, --save FILE` — Save JSON report to file
-- `-H, --help-brief` — Display compact help with all options
-
----
-
-## Configuration
-
-SpectreScan supports environment-based configuration via `.env` file. Copy `.env.example` to `.env` and fill in your values:
+4. Copy the template config and edit `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-### Environment Variables
+5. Run the scanner:
+
+```bash
+python main.py 127.0.0.1
+```
+
+---
+
+## ✨ What SpectreScan Does
+
+- Asynchronous TCP connect scanning
+- TCP SYN scanning when running as root
+- UDP scanning support
+- CIDR/subnet discovery
+- OS detection using TTL analysis
+- Service and version probing
+- Nmap-style scripting engine
+- Plugin-based service detection
+- Optional CVE lookups via NVD
+- Proxy routing through HTTP/HTTPS/SOCKS5
+- JSON report export
+
+---
+
+## 📦 Installation
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+---
+
+## ▶️ Usage
+
+### Interactive mode
+
+```bash
+python main.py -i
+```
+
+This prompt-based mode asks for:
+- Target IP or CIDR
+- Ports or port ranges
+- Scan type
+- Service/version detection
+- OS detection
+- Script and plugin execution
+- Timeout and concurrency
+- Save path for JSON report
+
+### Command-line examples
+
+```bash
+python main.py 192.168.1.1
+python main.py 192.168.1.1 -P 22,80,443
+sudo python main.py 192.168.1.1 -M syn -O -sV
+python main.py 192.168.1.1 -sU -P 53,123,161
+python main.py 192.168.1.1 -sV --check-cve
+python main.py 192.168.1.1 --proxy socks5://127.0.0.1:1080
+python main.py 192.168.1.1 -sC -p -o scan_report.json
+```
+
+---
+
+## 🧭 Command-line Options
+
+```bash
+python main.py -h
+```
+
+The available CLI options are:
+
+- `-h, --help` — show help message and exit
+- `-i, --interactive` — launch interactive menu mode
+- `-P, --ports PORTS` — port range or list, e.g. `22,80,443,1000-2000`
+- `-M, --scan-type {auto,tcp,syn,udp,all}` — scan type to perform
+- `-T, --timing-template {0,1,2,3,4,5}` — timing template
+- `--timeout TIMEOUT` — connection timeout in seconds
+- `-c, --concurrency CONCURRENCY` — maximum concurrent probes
+- `-n, --no-discovery` — skip host discovery
+- `-sS, --syn` — perform TCP SYN scan (requires root)
+- `-sU, --udp` — perform UDP scan
+- `-O, --os` — enable OS detection via TTL
+- `--aggressive-fingerprinting` — enable advanced OS fingerprinting
+- `-sV, --version` — probe open ports for service/version info
+- `--check-cve` — check detected services for known CVEs
+- `-sC, --scripts` — run built-in Nmap-style scripts
+- `-C, --script-categories SCRIPT_CATEGORIES` — comma-separated script categories
+- `-p, --plugins` — run service plugins from the `plugins/` folder
+- `--proxy PROXY_URL` — use proxy (e.g. `http://host:port`, `socks5://host:port`)
+- `-o, --save FILE` — save JSON report to file
+
+### Scan type notes
+
+- `auto` — SYN scan if running as root, otherwise TCP connect scan
+- `tcp` — TCP connect scan only
+- `syn` — TCP SYN scan (root required)
+- `udp` — UDP scan only
+- `all` — TCP + SYN + UDP (SYN and OS detection may be disabled if not root)
+
+---
+
+## ⚙️ Configuration
+
+SpectreScan loads environment variables from a `.env` file using `python-dotenv`. Copy `.env.example` to `.env`, then fill in values.
+
+```bash
+cp .env.example .env
+```
+
+### Environment variables
 
 ```bash
 # Proxy Settings
-PROXY_HTTP=http://proxy.company.com:8080
-PROXY_HTTPS=https://proxy.company.com:8080
-PROXY_SOCKS5=socks5://127.0.0.1:1080
+PROXY_HTTP=
+PROXY_HTTPS=
+PROXY_SOCKS5=
 
 # CVE Database
-CVE_API_KEY=your_nvd_api_key_here
+CVE_API_KEY=
 NVD_API_URL=https://services.nvd.nist.gov/rest/json/cves/2.0
 
 # API Keys for Service Detection
@@ -254,261 +172,118 @@ LOG_LEVEL=INFO
 LOG_FILE=
 ```
 
+### What these variables do
+
+- `PROXY_HTTP`, `PROXY_HTTPS`, `PROXY_SOCKS5` — proxy routing for outbound scan traffic
+- `CVE_API_KEY` — NVD API key used by `--check-cve`
+- `NVD_API_URL` — NVD endpoint for CVE lookups
+- `SHODAN_API_KEY`, `CENSYS_API_KEY` — placeholders for future service detection integrations
+- `DEFAULT_SCAN_TYPE`, `DEFAULT_TIMEOUT`, `DEFAULT_CONCURRENCY` — fallback scan defaults
+- `LOG_LEVEL`, `LOG_FILE` — logging configuration
+
 ---
 
-## Advanced Features
+## 🧠 Timing Templates
 
-### 1. Timing Templates
+Use `-T` to choose a scan speed profile:
 
-SpectreScan implements Nmap-style timing templates for different scan profiles:
+- `0` — Paranoid: very slow, stealthy
+- `1` — Sneaky: quiet and cautious
+- `2` — Polite: reduced network load
+- `3` — Normal: balanced speed/stealth (default)
+- `4` — Aggressive: fast scanning
+- `5` — Insane: maximum speed
+
+Example:
 
 ```bash
-# Paranoid (IDS evasion)
-python main.py 192.168.1.1 -T0
-
-# Sneaky (stealthy)
-python main.py 192.168.1.1 -T1
-
-# Polite (network-friendly)
-python main.py 192.168.1.1 -T2
-
-# Normal (default, balanced)
 python main.py 192.168.1.1 -T3
-
-# Aggressive (fast scanning)
-python main.py 192.168.1.1 -T4
-
-# Insane (maximum speed)
-python main.py 192.168.1.1 -T5
 ```
 
-Each template automatically configures timeout, concurrency, and retry settings.
+---
 
-### 2. Aggressive OS Fingerprinting
+## 🛡️ CVE Integration
 
-Beyond TTL analysis, use advanced fingerprinting techniques:
-
-```bash
-sudo python main.py 192.168.1.1 --aggressive-fingerprinting
-```
-
-Analyzes:
-- **TCP Window Size** — OS-specific window size patterns
-- **SYN Cookies** — Linux-specific SYN cookie implementation
-- **IP Options** — Varied response handling by different OS
-- **ICMP Patterns** — ICMP echo reply behavior
-
-### 3. CVE Integration
-
-Automatically check detected services for known vulnerabilities:
+Enable CVE checking with:
 
 ```bash
 python main.py 192.168.1.1 -sV --check-cve
 ```
 
-Requires NVD API key (free from NIST):
-1. Register at https://nvd.nist.gov/developers/request-an-api-key
-2. Add to `.env`: `CVE_API_KEY=your_key_here`
+This will query the NVD API for known vulnerabilities related to detected service/version strings.
 
-Results include:
-- CVE IDs for detected service versions
-- Severity levels (Critical, High, Medium, Low)
-- CVSS scores
+### Setup
 
-### 4. Proxy Routing
+1. Register for an NVD API key at:
+   `https://nvd.nist.gov/developers/request-an-api-key`
+2. Add the key to `.env`:
+   `CVE_API_KEY=your_key_here`
 
-Route scans through HTTP, HTTPS, or SOCKS5 proxies:
+---
+
+## 🌐 Proxy Routing
+
+Use a proxy for scan traffic:
 
 ```bash
-# HTTP proxy
-python main.py 192.168.1.1 --proxy http://proxy.company.com:8080
-
-# SOCKS5 proxy
 python main.py 192.168.1.1 --proxy socks5://127.0.0.1:1080
 ```
 
-Or set environment variables:
+Or configure proxies via environment variables.
+
+---
+
+## 🧩 Plugins & Scripts
+
+### Plugins
+
+Plugins live in `plugins/` and are loaded when `-p` is enabled.
+
+Example plugin usage:
 
 ```bash
-export PROXY_HTTP=http://proxy.company.com:8080
-python main.py 192.168.1.1
+python main.py 192.168.1.1 -p
 ```
 
-### 5. Advanced Nmap-Style Scripting
+### Scripts
 
-SpectreScan includes Nmap NSE-inspired scripts:
+Enable built-in scripts with `-sC`.
 
 ```bash
 python main.py 192.168.1.1 -sC
 ```
 
-Built-in scripts by category:
-- **ssl-cert** — Extract SSL certificate information
-- **http-enum** — Enumerate common HTTP paths
-- **smb-os-discovery** — SMB OS detection
-- **dns-brute** — DNS subdomain enumeration
-- **mysql-info** — MySQL version and configuration
-- **postgres-query** — PostgreSQL information
-- **redis-info** — Redis server information
-
-Create custom Lua-style scripts in `scripts/` directory:
-
-```lua
--- scripts/my-custom-scan.lua
--- @name my-custom-scan
--- @description Custom reconnaissance script
--- @categories discovery
--- @author YourName
-
-function run()
-    -- Custom script logic here
-    return "result"
-end
-```
+Use `-C` to choose categories like `default`, `http`, or `ssh`.
 
 ---
 
-SpectreScan includes NSE-style scripts that run automatically:
+## 🧪 Help and Validation
 
-### HTTP Scripts
+The tool supports two help methods:
 
-- **http-title** — Extract HTML page title
-- **http-methods** — Probe allowed HTTP methods
-- **http-git** — Detect exposed `.git` repositories
+- `python main.py -h`
+- `python main.py help`
 
-### FTP Scripts
-
-- **ftp-anon** — Check for anonymous FTP access
-
-### SSH Scripts
-
-- **ssh-auth-methods** — Report available SSH authentication methods
-
-### Script Categories
-
-- `default` — Runs on common ports automatically
-- `http` — HTTP-specific scripts
-- `ssh` — SSH-specific scripts
+If a target is missing or invalid, the scanner will print an error and stop.
 
 ---
 
-## Plugins
-
-Plugins are Python modules in the `plugins/` folder that extend scanner functionality.
-
-### Creating a Plugin
-
-Create `plugins/myservice_plugin.py`:
-
-```python
-PLUGIN_NAME = "myservice_plugin"
-PLUGIN_CATEGORIES = ["default", "myservice"]
-PORTS = [1234]
-SERVICE_KEYWORDS = ["MYSVC"]
-
-def run(target, port, banner):
-    # Custom probing logic
-    return {"result": "data"}
-```
-
-### Existing Plugins
-
-- **http_plugin.py** — HTTP server detection and info extraction
-- **ssh_plugin.py** — SSH banner and capability detection
-
----
-
-## OS Detection
-
-SpectreScan identifies operating systems using TTL (Time-To-Live) analysis from TCP responses:
-
-- **Linux** — TTL ≤ 64 (default 64)
-- **Windows** — TTL around 128
-- **Cisco/Network Device** — TTL around 255
-
-**Note:** OS detection requires root privileges to craft raw packets. Confidence is calculated based on TTL deviation from known baselines.
-
-Examples:
-- `Linux (100%)` — Perfect match (TTL = 64)
-- `Linux (92%)` — Close match (TTL = 66)
-- `Windows (87%)` — Reasonable match (TTL = 124)
-
----
-
-## Project Structure
+## 📁 Project Layout
 
 ```
 SpectreScan/
-│
-├── core/
-│   ├── scanner.py          # Async TCP connect scanning
-│   ├── syn.py              # SYN scanning with Scapy
-│   ├── udp.py              # UDP scanning
-│   ├── banner.py           # Banner grabbing
-│   ├── version.py          # Version detection probes
-│   ├── os_detect.py        # TTL-based OS fingerprinting
-│   ├── fingerprinting.py   # ADVANCED: Aggressive OS fingerprinting
-│   ├── discovery.py        # ARP-based host discovery
-│   ├── scripts.py          # NSE-style scripting engine
-│   ├── lua_scripts.py      # ADVANCED: Nmap-style Lua scripts
-│   ├── plugin_manager.py   # Dynamic plugin loader
-│   ├── reporter.py         # JSON report generation
-│   ├── proxy.py            # ADVANCED: Proxy routing support
-│   ├── cve_engine.py       # ADVANCED: CVE database integration
-│   ├── timing.py           # ADVANCED: Timing templates
-│   ├── utils.py            # Port parsing utilities
-│   └── interactive.py      # Interactive menu mode
-│
-├── plugins/
-│   ├── http_plugin.py      # HTTP service plugin
-│   └── ssh_plugin.py       # SSH service plugin
-│
-├── scripts/                # Custom Lua-style scripts directory
-│   └── (place custom .lua scripts here)
-│
-├── main.py                 # CLI entry point
-├── requirements.txt        # Python dependencies
-├── .env.example            # Environment configuration template
-├── README.md               # This file
-└── LICENSE
+├── core/                 # scanner internals and modules
+├── plugins/              # service plugins
+├── scripts/              # optional Lua-style scripts
+├── main.py               # CLI entry point
+├── requirements.txt      # Python dependencies
+├── .env.example          # config template
+└── README.md             # documentation
 ```
 
----
-
-## Root Privileges
-
-The following features require root/sudo:
-
-- `-M syn` or `-sS` — SYN scanning
-- `-O` / `--os` — OS detection via TTL analysis
-- `-sU` / `--udp` — UDP scanning
-
-**Why?** These features use raw socket access, which is restricted to root on Linux.
 
 ---
 
-## Technologies Used
+## ⚖️ Disclaimer
 
-- **Python 3** — Core language
-- **Asyncio** — Asynchronous I/O for concurrent scanning
-- **Scapy** — Raw packet crafting
-- **Rich** — Beautiful terminal UI
-- **Socket** — Network operations
-
----
-
-## Legal Disclaimer
-
-This project is intended strictly for:
-
-- Educational purposes
-- Authorized security testing
-- Personal lab environments
-
-**Do not scan systems or networks without explicit authorization.**
-
----
-
-## Author
-
-Deepanshu  
+Use SpectreScan only on systems you own or are authorized to test. Unauthorized scanning is illegal.
