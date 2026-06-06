@@ -86,13 +86,12 @@ python main.py -i
 
 This starts a custom console shell (`spectre ❯ `) featuring a professional command interface with command auto-completion.
 
----
+### 💻 Interactive Console Walkthrough
 
-### 💻 Click to Expand Interactive Terminal Walkthroughs:
+Here is a step-by-step example of how the interactive console functions in practice:
 
-<details>
-<summary><b>1. Show Options & Set Configuration (set / show)</b></summary>
-
+#### 1. Show & Adjust Configuration (`show options` / `set`)
+Use the `show options` command to see the default configuration state, then use `set` to modify options dynamically:
 ```text
 spectre ❯ show options
 
@@ -117,11 +116,9 @@ spectre ❯ set ports 80,443
 spectre ❯ set version_detect True
 [+] Set version_detect ❯ True
 ```
-</details>
 
-<details>
-<summary><b>2. Run a Scan (scan)</b></summary>
-
+#### 2. Run the Scan Engine (`scan`)
+Type `scan` to trigger host discovery and the asynchronous scanning engine:
 ```text
 spectre ❯ scan
 
@@ -144,12 +141,8 @@ Scan Results:
 | 127.0.0.1 | 443/tcp    | open   | nginx 1.18.0    | -   |
 +-----------+------------+--------+-----------------+-----+
 [+] Scan completed in 0.45 seconds. Loaded results in memory.
-```
-</details>
-
-<details>
-<summary><b>3. Look up Service CVEs manually (cvecheck)</b></summary>
-
+#### 3. Interactively Check Service Vulnerabilities (`cvecheck`)
+You can manually check specific service banners for known CVEs:
 ```text
 spectre ❯ cvecheck apache 2.4.41
 
@@ -164,11 +157,9 @@ CVEs for apache:
 | CVE-2021-26691 | Apache HTTP Server versions 2.4.0 to 2.4.46...     | HIGH   |
 +----------------+----------------------------------------------------+--------+
 ```
-</details>
 
-<details>
-<summary><b>4. View Registered Scripts and Plugins (show scripts / plugins)</b></summary>
-
+#### 4. View Script Library & Plugins (`show scripts` / `show plugins`)
+Inspect active script suites and detection extensions:
 ```text
 spectre ❯ show scripts
 
@@ -181,7 +172,6 @@ Nmap-Style Script Library:
 | smb-os-discovery  | smb        | Enumerate SMB OS information       |
 +-------------------+------------+------------------------------------+
 ```
-</details>
 
 ---
 
