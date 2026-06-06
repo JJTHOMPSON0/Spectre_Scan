@@ -72,24 +72,13 @@ console.print(f"[cyan]Timeout: {args.timeout}s, Concurrency: {args.concurrency}[
 if args.proxy:
     proxy_manager.enable_proxy(args.proxy)
 
-if args.interactive:
-    config = interactive_menu()
-    if not config:
-        raise SystemExit(1)
-    args.target = config["target"]
-    args.ports = config["ports"]
-    args.scan_type = config["scan_type"]
-    args.version = config["version_detect"]
-    args.os = config["os_detect"]
-    args.scripts = config["scripts"]
-    args.plugins = config["plugins"]
-    args.timeout = config["timeout"]
-    args.concurrency = config["concurrency"]
-    args.no_discovery = config["no_discovery"]
-    args.save = config["save"]
-
+# If target is not provided, default to interactive console mode
 if not args.target:
-    parser.error("the following arguments are required: target")
+    args.interactive = True
+
+if args.interactive:
+    interactive_menu()
+    raise SystemExit(0)
 
 if not validate_target(args.target):
     parser.error("invalid target: must be an IP address, CIDR, or hostname")

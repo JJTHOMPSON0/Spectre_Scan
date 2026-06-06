@@ -74,25 +74,120 @@ pip install -r requirements.txt
 
 ---
 
-## ▶️ Usage
+### Interactive Mode (Console)
 
-### Interactive mode
+Running SpectreScan without arguments or with the `-i` flag launches the interactive CLI shell:
 
 ```bash
+python main.py
+# or
 python main.py -i
 ```
 
-This prompt-based mode asks for:
-- Target IP or CIDR
-- Ports or port ranges
-- Scan type
-- Service/version detection
-- OS detection
-- Script and plugin execution
-- Timeout and concurrency
-- Save path for JSON report
+This starts a custom console shell (`spectre ❯ `) featuring a professional command interface with command auto-completion.
 
-### Command-line examples
+---
+
+### 💻 Click to Expand Interactive Terminal Walkthroughs:
+
+<details>
+<summary><b>1. Show Options & Set Configuration (set / show)</b></summary>
+
+```text
+spectre ❯ show options
+
+SpectreScan Current Configuration:
++---------------------------+------------+-------------------------------------------------------------+
+| Option                    | Value      | Description                                                 |
++---------------------------+------------+-------------------------------------------------------------+
+| target                    |            | Target IP address, hostname, or CIDR (e.g. 192.168.1.1/24)  |
+| ports                     | 22,80,443  | Port range or list, e.g. 22,80,443,1000-2000                |
+| scan_type                 | auto       | Scan type: auto, tcp, syn, udp, all                         |
+| version_detect            | True       | Probe service versions (-sV)                                |
+| os_detect                 | False      | Enable OS detection via TTL (requires root)                 |
+| scripts                   | False      | Run built-in Nmap-style scripts (-sC)                       |
++---------------------------+------------+-------------------------------------------------------------+
+
+spectre ❯ set target 127.0.0.1
+[+] Set target ❯ 127.0.0.1
+
+spectre ❯ set ports 80,443
+[+] Set ports ❯ 80,443
+
+spectre ❯ set version_detect True
+[+] Set version_detect ❯ True
+```
+</details>
+
+<details>
+<summary><b>2. Run a Scan (scan)</b></summary>
+
+```text
+spectre ❯ scan
+
+[*] Initiating SpectreScan...
+Target: 127.0.0.1
+Ports: 80,443
+
+[+] Running TCP connect scan on 1 host(s)...
+[+] 127.0.0.1:80/tcp OPEN HTTP/1.1 200 OK (nginx/1.18.0)
+[+] 127.0.0.1:443/tcp OPEN HTTP/1.1 200 OK (nginx/1.18.0)
+
+[+] Checking for service CVEs...
+[+] nginx 1.18.0 has 3 known CVEs
+
+Scan Results:
++-----------+------------+--------+-----------------+-----+
+| HOST      | PORT       | STATE  | SERVICE/VERSION | OS  |
++-----------+------------+--------+-----------------+-----+
+| 127.0.0.1 | 80/tcp     | open   | nginx 1.18.0    | -   |
+| 127.0.0.1 | 443/tcp    | open   | nginx 1.18.0    | -   |
++-----------+------------+--------+-----------------+-----+
+[+] Scan completed in 0.45 seconds. Loaded results in memory.
+```
+</details>
+
+<details>
+<summary><b>3. Look up Service CVEs manually (cvecheck)</b></summary>
+
+```text
+spectre ❯ cvecheck apache 2.4.41
+
+[*] Fetching CVEs for service: apache (Version: 2.4.41)...
+
+CVEs for apache:
++----------------+----------------------------------------------------+--------+
+| CVE ID         | Description                                        | Score  |
++----------------+----------------------------------------------------+--------+
+| CVE-2020-1927  | Apache HTTP Server versions 2.4.0 to 2.4.41...     | HIGH   |
+| CVE-2020-1934  | Apache HTTP Server versions 2.4.0 to 2.4.41...     | MEDIUM |
+| CVE-2021-26691 | Apache HTTP Server versions 2.4.0 to 2.4.46...     | HIGH   |
++----------------+----------------------------------------------------+--------+
+```
+</details>
+
+<details>
+<summary><b>4. View Registered Scripts and Plugins (show scripts / plugins)</b></summary>
+
+```text
+spectre ❯ show scripts
+
+Nmap-Style Script Library:
++-------------------+------------+------------------------------------+
+| Name              | Category   | Description                        |
++-------------------+------------+------------------------------------+
+| ssl-cert          | ssl        | Extracts SSL certificate info      |
+| http-enum         | http       | Enumerate common HTTP paths        |
+| smb-os-discovery  | smb        | Enumerate SMB OS information       |
++-------------------+------------+------------------------------------+
+```
+</details>
+
+---
+
+### Command-line Mode
+
+If you supply a target argument, SpectreScan executes immediately in standard command-line mode:
 
 ```bash
 python main.py 192.168.1.1
