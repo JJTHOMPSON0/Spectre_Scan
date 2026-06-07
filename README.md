@@ -2,7 +2,7 @@
   <img src="assets/banner.jpeg" width="950">
 </p>
 
-# SpectreScan v2
+# SpectreScan
 
 [![DOCS](https://img.shields.io/badge/DOCS-SpectreScan-blue?style=for-the-badge)](#readme) [![LICENSE](https://img.shields.io/badge/LICENSE-MIT-green?style=for-the-badge)](LICENSE) [![BUILT BY](https://img.shields.io/badge/BUILT%20BY-Deepanshu-purple?style=for-the-badge)](#) [![LANG](https://img.shields.io/badge/LANG-EN-lightgrey?style=for-the-badge)](#)
 
@@ -10,43 +10,6 @@
 
 SpectreScan is built for security learning, authorized reconnaissance, and lab testing. It supports asynchronous scanning, SYN and UDP probes, OS fingerprinting, version detection, scripting, plugins, proxy routing, and optional CVE lookups.
 
----
-
-## 🚀 Quick Start
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/SpectreScan.git
-cd SpectreScan
-```
-
-2. Create and activate a Python virtual environment:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-3. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-4. Copy the template config and edit `.env`:
-
-```bash
-cp .env.example .env
-```
-
-5. Run the scanner:
-
-```bash
-python main.py 127.0.0.1
-```
-
----
 
 ## ✨ What SpectreScan Does
 
@@ -65,6 +28,14 @@ python main.py 127.0.0.1
 ---
 
 ## 📦 Installation
+
+1.Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/SpectreScan.git
+cd SpectreScan
+```
+2.Start a python virtual environment:
 
 ```bash
 python3 -m venv venv
