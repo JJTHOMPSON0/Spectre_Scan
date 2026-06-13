@@ -272,11 +272,13 @@ Enable CVE checking with:
 python main.py 192.168.1.1 -sV --check-cve
 ```
 
-This will query the NVD API for known vulnerabilities related to detected service/version strings.
+SpectreScan implements a **dual-source CVE Correlation Engine**:
+1. **NVD API (Primary)**: Queries NIST NVD's vulnerability database for CVE matches.
+2. **CIRCL CVE Search API (Automatic Fallback)**: If NVD is rate-limited, times out, or contains no direct keyword hits, the engine queries the CIRCL public endpoint to retrieve a comprehensive list of matches, filtering them dynamically by the detected service version.
 
 ### Setup
 
-1. Register for an NVD API key at:
+1. (Optional but recommended to prevent rate limits) Register for an NVD API key at:
    `https://nvd.nist.gov/developers/request-an-api-key`
 2. Add the key to `.env`:
    `CVE_API_KEY=your_key_here`
