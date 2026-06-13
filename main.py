@@ -172,6 +172,8 @@ if args.aggressive_fingerprinting and results:
 if args.check_cve and results:
     console.print("\n[+] Checking for CVEs...")
     for result in results:
+        if result.get("status") not in ("open", "open|filtered"):
+            continue
         service = result.get("banner", "").split("/")[0] if result.get("banner") else ""
         version = result.get("version", "")
         if service:
@@ -213,6 +215,8 @@ console.print(f"[cyan]Scan time: {scan_duration:.2f} seconds[/cyan]")
 if args.scripts:
     console.print("\n[*] Initiating Script Engine (-sC)...")
     for host_data in results:
+        if host_data.get("status") not in ("open", "open|filtered"):
+            continue
         script_output = run_scripts(
             host_data["host"],
             host_data["port"],
@@ -227,6 +231,8 @@ if args.scripts:
     # Advanced Lua-style scripting
     console.print("\n[*] Initiating Advanced NSE-style Scripts...")
     for host_data in results:
+        if host_data.get("status") not in ("open", "open|filtered"):
+            continue
         port = host_data.get("port")
         scripts = script_library.get_scripts_by_port(port)
         for script in scripts:
@@ -241,6 +247,8 @@ if args.scripts:
 if args.plugins and plugins:
     console.print("\n[*] Running service plugins...")
     for host_data in results:
+        if host_data.get("status") not in ("open", "open|filtered"):
+            continue
         plugin_output = run_plugins(plugins, host_data["host"], host_data["port"], host_data.get("banner", ""))
         if plugin_output:
             host_data["plugins"] = plugin_output

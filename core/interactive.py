@@ -325,6 +325,8 @@ class SpectreShell(cmd.Cmd):
         if results:
             console.print("\n[+] Checking for service CVEs...")
             for res in results:
+                if res.get("status") not in ("open", "open|filtered"):
+                    continue
                 service = res.get("banner", "").split("/")[0] if res.get("banner") else ""
                 version = res.get("version", "")
                 if service and service != "Unknown Service":
@@ -344,6 +346,8 @@ class SpectreShell(cmd.Cmd):
         if self.config["scripts"] and results:
             console.print("\n[*] Initiating Script Engine (-sC)...")
             for host_data in results:
+                if host_data.get("status") not in ("open", "open|filtered"):
+                    continue
                 script_output = run_scripts(
                     host_data["host"],
                     host_data["port"],
@@ -358,6 +362,8 @@ class SpectreShell(cmd.Cmd):
             # Advanced NSE scripts
             console.print("\n[*] Running advanced NSE-style scripts...")
             for host_data in results:
+                if host_data.get("status") not in ("open", "open|filtered"):
+                    continue
                 port = host_data.get("port")
                 scripts = script_library.get_scripts_by_port(port)
                 for script in scripts:
@@ -371,6 +377,8 @@ class SpectreShell(cmd.Cmd):
             if plugins:
                 console.print("\n[*] Running service plugins...")
                 for host_data in results:
+                    if host_data.get("status") not in ("open", "open|filtered"):
+                        continue
                     plugin_output = run_plugins(plugins, host_data["host"], host_data["port"], host_data.get("banner", ""))
                     if plugin_output:
                         host_data["plugins"] = plugin_output

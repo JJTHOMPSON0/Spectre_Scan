@@ -22,6 +22,12 @@ def udp_scan(live_hosts, ports, timeout=1.0):
                 })
             elif response.haslayer(ICMP):
                 if int(response.getlayer(ICMP).type) == 3 and int(response.getlayer(ICMP).code) == 3:
-                    continue
+                    console.print(f"[red][-] {host}:{port}/udp CLOSED[/red]")
+                    results.append({
+                        "host": str(host),
+                        "port": port,
+                        "protocol": "udp",
+                        "status": "closed",
+                    })
 
     return results

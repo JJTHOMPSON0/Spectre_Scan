@@ -40,10 +40,35 @@ async def scan_port(ip, port, results, sem, progress, task_id, version_detect=Fa
 
             writer.close()
             await writer.wait_closed()
-        except (asyncio.TimeoutError, ConnectionRefusedError, OSError):
-            return
-        except Exception:
-            return
+        except asyncio.TimeoutError:
+            result = {
+                "host": str(ip),
+                "port": port,
+                "protocol": "tcp",
+                "status": "filtered",
+                "banner": "-",
+            }
+            results.append(result)
+            console.print(f"[yellow][-] {ip}:{port}/tcp FILTERED[/yellow]")
+        except ConnectionRefusedError:
+            result = {
+                "host": str(ip),
+                "port": port,
+                "protocol": "tcp",
+                "status": "closed",
+                "banner": "-",
+            }
+            results.append(result)
+            console.print(f"[red][-] {ip}:{port}/tcp CLOSED[/red]")
+        except Exception as e:
+            result = {
+                "host": str(ip),
+                "port": port,
+                "protocol": "tcp",
+                "status": "closed",
+                "banner": f"- ({str(e)})",
+            }
+            results.append(result)
         finally:
             if progress is not None and task_id is not None:
                 progress.advance(task_id)

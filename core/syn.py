@@ -22,23 +22,32 @@ def syn_scan(live_hosts, ports, os_detect=False):
                 packet = IP(dst=str(host)) / TCP(dport=port, flags="S")
                 response = sr1(packet, timeout=0.5, verbose=0)
 
-                if response and response.haslayer(TCP) and response[TCP].flags == 0x12:
-                    host_result = {
-                        "host": str(host),
-                        "port": port,
-                        "protocol": "tcp",
-                        "status": "open",
-                    }
+                host_result = {
+                    "host": str(host),
+                    "port": port,
+                    "protocol": "tcp",
+                }
 
-                    if os_detect and response.haslayer(IP):
-                        os_guess = analyze_ttl(response[IP])
-                        host_result["os"] = os_guess
-                        print(f"[+] {host}:{port}/tcp OPEN [OS: {os_guess}]")
+                if response and response.haslayer(TCP):
+                    if response[TCP].flags == 0x12: # SYN-ACK
+                        host_result["status"] = "open"
+                        if os_detect and response.haslayer(IP):
+                            os_guess = analyze_ttl(response[IP])
+                            host_result["os"] = os_guess
+                            print(f"[+] {host}:{port}/tcp OPEN [OS: {os_guess}]")
+                        else:
+                            print(f"[+] {host}:{port}/tcp OPEN")
+                    elif response[TCP].flags & 0x04: # RST-ACK or RST
+                        host_result["status"] = "closed"
+                        print(f"[-] {host}:{port}/tcp CLOSED")
                     else:
-                        print(f"[+] {host}:{port}/tcp OPEN")
+                        host_result["status"] = "filtered"
+                        print(f"[-] {host}:{port}/tcp FILTERED")
+                else:
+                    host_result["status"] = "filtered"
+                    print(f"[-] {host}:{port}/tcp FILTERED")
 
-                    results.append(host_result)
-
+                results.append(host_result)
                 progress.advance(task_id)
 
     return results
